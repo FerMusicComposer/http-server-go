@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -16,7 +18,7 @@ func main() {
 	}
 	defer l.Close() // listener closure is deferred to ensure it's closed after program exits
 
-	// Second, we tell the listener to accept incoming connections
+	// Second, the listener is set to accept incoming connections
 	conn, err := l.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
@@ -25,8 +27,30 @@ func main() {
 
 	defer conn.Close() // connection closure is deferred to ensure it's closed after program exits
 
-	// Third, we respond to the incoming connection, confirming the success in this case
-	response := "HTTP/1.1 200 OK\r\n\r\n"
+	// Third, the server parses the request and splits it in 2 parts, this way the second half is the path to check
+	reader := bufio.NewReader(conn)
+	requestLine, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error parsing the request: ", err.Error())
+		return
+	}
+	parts := strings.Split(requestLine, " ")
+
+	if len(parts) < 2 {
+		fmt.Println("Invalid request")
+		return
+	}
+
+	path := parts[1]
+
+	// Fourth, based on the path we respond to the incoming connection. If path == '/' then 200 OK, else 404 NOT FOUND
+	var response string
+	if path == "/" {
+		response = "HTTP/1.1 200 OK\r\n\r\n"
+	} else {
+		response = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
+	}
+
 	_, err = conn.Write([]byte(response))
 	if err != nil {
 		fmt.Println("Error writing response: ", err.Error())
