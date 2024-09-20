@@ -44,11 +44,20 @@ func main() {
 
 	path := parts[1]
 
-	// Fourth, based on the path we respond to the incoming connection. If path == '/' then 200 OK, else 404 NOT FOUND
+	// Fourth, based on the path we respond to the incoming connection.
+	// If path == '/' then 200 OK,
+	// If path includes /echo/{string} then we respond with 200, headers for Content-Type and Content-Lenght and a body which is the passed string
+	// Else 404 NOT FOUND
 	var response string
-	if path == "/" {
+
+	switch {
+	case strings.HasPrefix(path, "/echo/"):
+		echoStr := strings.TrimPrefix(path, "/echo/")
+		contentLength := len(echoStr)
+		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", contentLength, echoStr)
+	case path == "/":
 		response = "HTTP/1.1 200 OK\r\n\r\n"
-	} else {
+	default:
 		response = "HTTP/1.1 404 Not Found\r\n\r\n"
 	}
 
