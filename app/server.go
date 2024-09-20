@@ -17,7 +17,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer l.Close() // listener closure is deferred to ensure it's closed after program exits
-
+	fmt.Println("Server started on port 4221")
 	// Second, the listener is set to accept incoming connections
 	conn, err := l.Accept()
 	if err != nil {
