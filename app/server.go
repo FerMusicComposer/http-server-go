@@ -18,6 +18,7 @@ func main() {
 	}
 	defer l.Close() // listener closure is deferred to ensure it's closed after program exits
 	fmt.Println("Server started on port 4221")
+
 	// Second, the listener is set to accept incoming connections
 	conn, err := l.Accept()
 	if err != nil {
@@ -48,7 +49,7 @@ func main() {
 	if path == "/" {
 		response = "HTTP/1.1 200 OK\r\n\r\n"
 	} else {
-		response = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
+		response = "HTTP/1.1 404 Not found\r\n\r\n"
 	}
 
 	_, err = conn.Write([]byte(response))
