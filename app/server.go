@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -72,10 +73,12 @@ func handleConnection(conn net.Conn) {
 		return
 	}
 
+	method := parts[0]
 	path := parts[1]
 
 	// Extract headers from request
 	headers := make(map[string]string)
+	var contentLength int
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil || line == "\r\n" {
@@ -83,8 +86,22 @@ func handleConnection(conn net.Conn) {
 		}
 		headerParts := strings.SplitN(strings.TrimSpace(line), ":", 2)
 		if len(headerParts) == 2 {
-			headers[strings.TrimSpace(headerParts[0])] = strings.TrimSpace(headerParts[1])
+			key := strings.TrimSpace(headerParts[0])
+			value := strings.TrimSpace(headerParts[1])
+			headers[key] = value
+
+			if key == "Content Lenght" {
+				contentLength, _ = strconv.Atoi(value)
+			}
 		}
+	}
+
+	// Read request body
+	body := make([]byte, contentLength)
+	_, err = reader.Read(body)
+	if err != nil {
+		fmt.Println("Error reading request body:", err)
+		return
 	}
 
 	// Fourth, based on the path we respond to the incoming connection by checking which route is being requested
@@ -100,7 +117,7 @@ func handleConnection(conn net.Conn) {
 	handler, _ := findHandler(path, routes)
 	switch {
 	case handler != nil:
-		contentType, content := handler(path, headers)
+		contentType, content := handler(method, path, headers, body)
 		if path[:7] == "/files/" && contentType == "" && content == "" {
 			response = "HTTP/1.1 404 Not Found\r\n\r\n"
 		} else {
