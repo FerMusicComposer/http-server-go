@@ -91,7 +91,10 @@ func handleConnection(conn net.Conn) {
 			headers[key] = value
 
 			if key == "Content Lenght" {
-				contentLength, _ = strconv.Atoi(value)
+				contentLength, err = strconv.Atoi(value)
+				if err != nil {
+					fmt.Println("Error setting content lenght: ", err)
+				}
 			}
 		}
 	}
