@@ -114,6 +114,9 @@ func handleConnection(conn net.Conn) {
 		"/files/":     handleFileRequest,
 	}
 
+	fmt.Printf("Body length before passing to handler: %d\n", len(body))
+	fmt.Println("body content: ", body)
+
 	handler, _ := findHandler(path, routes)
 	switch {
 	case handler != nil:

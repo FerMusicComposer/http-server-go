@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,6 +21,7 @@ func handleUserAgent(method, path string, headers map[string]string, body []byte
 }
 
 func handleFileRequest(method, path string, headers map[string]string, body []byte) (contentType string, content string) {
+	fmt.Printf("Received body length in handler: %d\n", len(body))
 	_ = headers
 	filename := strings.TrimPrefix(path, "/files/")
 	filepath := filepath.Join(directory, filename)
@@ -35,11 +37,13 @@ func handleFileRequest(method, path string, headers map[string]string, body []by
 
 		return "application/octet-stream", content
 	case method == "POST":
+		fmt.Printf("Writing to filepath: %s\n", filepath)
 		err := os.WriteFile(filepath, body, 0644)
 		if err != nil {
+			fmt.Printf("Error writing file: %v\n", err)
 			return "", ""
 		}
-
+		fmt.Printf("Wrote %d bytes to file\n", len(body))
 		return "text/plain", "HTTP/1.1 201 Created\r\n\r\n"
 	default:
 		return "", ""
