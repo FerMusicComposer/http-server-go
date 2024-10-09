@@ -28,6 +28,7 @@ func handleFileRequest(method, path string, headers map[string]string, body []by
 
 	switch {
 	case method == "GET":
+		fmt.Println("checking for filepath: ", filepath)
 		fileContent, err := os.ReadFile(filepath)
 		if err != nil {
 			return "", ""
