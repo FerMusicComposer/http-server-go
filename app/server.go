@@ -128,8 +128,7 @@ func handleConnection(conn net.Conn) {
 		contentType, content := handler(method, path, headers, body)
 		if path[:7] == "/files/" && contentType == "" && content == "" {
 			response = "HTTP/1.1 404 Not Found\r\n\r\n"
-		}
-		if method == "POST" && contentType != "" {
+		} else if method == "POST" && contentType != "" {
 			response = content
 		} else {
 			response = generateResponse(contentType, content)
