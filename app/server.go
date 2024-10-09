@@ -2,13 +2,19 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 )
 
+var directory string
+
 func main() {
+	flag.StringVar(&directory, "directory", "", "the directory from which files will be served")
+	flag.Parse()
+
 	// Steps to build an http server:
 	// First, a listener is created and bound to a tcp port. In this case is port 4221
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
@@ -88,6 +94,7 @@ func handleConnection(conn net.Conn) {
 	routes := map[string]Handler{
 		"/echo/":      handleEchoPath,
 		"/user-agent": handleUserAgent,
+		"/files/":     handleFileRequest,
 	}
 
 	handler, _ := findHandler(path, routes)
