@@ -26,7 +26,7 @@ func handleFileRequest(path string, headers map[string]string) (contentType stri
 
 	fileContent, err := os.ReadFile(filepath)
 	if err != nil {
-		return "", "HTTP/1.1 404 Not Found\r\n\r\n"
+		return "", ""
 	}
 
 	content = string(fileContent)

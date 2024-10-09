@@ -101,7 +101,11 @@ func handleConnection(conn net.Conn) {
 	switch {
 	case handler != nil:
 		contentType, content := handler(path, headers)
-		response = generateResponse(contentType, content)
+		if path[:7] == "/files/" && contentType == "" && content == "" {
+			response = "HTTP/1.1 404 Not Found\r\n\r\n"
+		} else {
+			response = generateResponse(contentType, content)
+		}
 	case path == "/":
 		response = "HTTP/1.1 200 OK\r\n\r\n"
 	default:
