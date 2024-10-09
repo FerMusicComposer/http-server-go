@@ -100,13 +100,14 @@ func handleConnection(conn net.Conn) {
 	}
 
 	// Read request body
+	fmt.Println("contentLength: ", contentLength)
 	body := make([]byte, contentLength)
 	_, err = reader.Read(body)
 	if err != nil {
 		fmt.Println("Error reading request body:", err)
 		return
 	}
-
+	fmt.Printf("Read body: %s\n", string(body))
 	// Fourth, based on the path we respond to the incoming connection by checking which route is being requested
 	// and responding with the appropriate handler or route
 	// Else 404 NOT FOUND
