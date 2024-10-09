@@ -22,12 +22,34 @@ func main() {
 	fmt.Println("")
 
 	// Second, the listener is set to accept incoming connections
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+
+		go handleConnection(conn)
 	}
 
+}
+
+func generateResponse(contentType, content string) string {
+	contentLength := len(content)
+	return fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", contentType, contentLength, content)
+}
+
+func findHandler(path string, routes map[string]Handler) (Handler, string) {
+	for prefix, handler := range routes {
+		if strings.HasPrefix(path, prefix) {
+			return handler, prefix
+		}
+	}
+
+	return nil, ""
+}
+
+func handleConnection(conn net.Conn) {
 	defer conn.Close() // connection closure is deferred to ensure it's closed after program exits
 
 	// Third, the server parses the request and splits it in 2 parts, this way the second half is the path to check
@@ -73,7 +95,7 @@ func main() {
 	case handler != nil:
 		contentType, content := handler(path, headers)
 		response = generateResponse(contentType, content)
-	case handler == nil && path == "/":
+	case path == "/":
 		response = "HTTP/1.1 200 OK\r\n\r\n"
 	default:
 		response = "HTTP/1.1 404 Not Found\r\n\r\n"
@@ -83,19 +105,4 @@ func main() {
 	if err != nil {
 		fmt.Println("Error writing response: ", err.Error())
 	}
-}
-
-func generateResponse(contentType, content string) string {
-	contentLength := len(content)
-	return fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", contentType, contentLength, content)
-}
-
-func findHandler(path string, routes map[string]Handler) (Handler, string) {
-	for prefix, handler := range routes {
-		if strings.HasPrefix(path, prefix) {
-			return handler, prefix
-		}
-	}
-
-	return nil, ""
 }
