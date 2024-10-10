@@ -41,9 +41,23 @@ func main() {
 
 }
 
-func generateResponse(contentType, content string) string {
+func acceptsContentEncoding(headers map[string]string) bool {
+	acceptEncoding, ok := headers["Accept-Encoding"]
+	if !ok {
+		return false
+	}
+
+	return strings.Contains(strings.ToLower(acceptEncoding), "gzip")
+}
+
+func generateResponse(contentType, content string, contentEncoding bool) string {
 	contentLength := len(content)
-	return fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", contentType, contentLength, content)
+	response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d", contentType, contentLength)
+	if contentEncoding {
+		response += "\r\nContent-Encoding: gzip"
+	}
+	response += fmt.Sprintf("\r\n\r\n%s", content)
+	return response
 }
 
 func findHandler(path string, routes map[string]Handler) (Handler, string) {
@@ -100,6 +114,8 @@ func handleConnection(conn net.Conn) {
 		}
 	}
 
+	useContentEncoding := acceptsContentEncoding(headers)
+
 	// Read request body
 	fmt.Println("contentLength: ", contentLength)
 	body := make([]byte, contentLength)
@@ -131,7 +147,7 @@ func handleConnection(conn net.Conn) {
 		} else if method == "POST" && contentType != "" {
 			response = content
 		} else {
-			response = generateResponse(contentType, content)
+			response = generateResponse(contentType, content, useContentEncoding)
 		}
 	case path == "/":
 		response = "HTTP/1.1 200 OK\r\n\r\n"
