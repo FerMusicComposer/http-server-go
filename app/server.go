@@ -47,7 +47,14 @@ func acceptsContentEncoding(headers map[string]string) bool {
 		return false
 	}
 
-	return strings.Contains(strings.ToLower(acceptEncoding), "gzip")
+	encodings := strings.Split(acceptEncoding, ",")
+	for _, encoding := range encodings {
+		if strings.TrimSpace(strings.ToLower(encoding)) == "gzip" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func generateResponse(contentType, content string, contentEncoding bool) string {
