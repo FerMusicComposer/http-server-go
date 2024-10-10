@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"net"
@@ -41,6 +43,23 @@ func main() {
 
 }
 
+func compressGzip(content string) ([]byte, error) {
+	var buf bytes.Buffer
+
+	gw := gzip.NewWriter(&buf)
+	_, err := gw.Write([]byte(content))
+	if err != nil {
+		return nil, err
+	}
+
+	err = gw.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
 func acceptsContentEncoding(headers map[string]string) bool {
 	acceptEncoding, ok := headers["Accept-Encoding"]
 	if !ok {
@@ -58,12 +77,19 @@ func acceptsContentEncoding(headers map[string]string) bool {
 }
 
 func generateResponse(contentType, content string, contentEncoding bool) string {
-	contentLength := len(content)
-	response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d", contentType, contentLength)
+	var response string
 	if contentEncoding {
-		response += "\r\nContent-Encoding: gzip"
+		compressedContent, err := compressGzip(content)
+		if err != nil {
+			fmt.Printf("Error compressing content: %v\n", err)
+			return ""
+		}
+		contentLength := len(compressedContent)
+		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\n\r\n%s", contentType, contentLength, compressedContent)
+	} else {
+		contentLength := len(content)
+		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", contentType, contentLength, content)
 	}
-	response += fmt.Sprintf("\r\n\r\n%s", content)
 	return response
 }
 
