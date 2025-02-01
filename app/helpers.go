@@ -62,16 +62,6 @@ func generateResponse(contentType, content string, contentEncoding bool) string 
 	return response
 }
 
-func findHandler(path string, routes map[string]Handler) (Handler, string) {
-	for prefix, handler := range routes {
-		if strings.HasPrefix(path, prefix) {
-			return handler, prefix
-		}
-	}
-
-	return nil, ""
-}
-
 func handleConnection(conn net.Conn) {
 	defer conn.Close() // connection closure is deferred to ensure it's closed after program exits
 
