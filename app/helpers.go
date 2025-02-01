@@ -130,17 +130,9 @@ func handleConnection(conn net.Conn) {
 	// Fourth, based on the path we respond to the incoming connection by checking which route is being requested
 	// and responding with the appropriate handler or route
 	// Else 404 NOT FOUND
+
 	var response string
-	routes := map[string]Handler{
-		"/echo/":      handleEchoPath,
-		"/user-agent": handleUserAgent,
-		"/files/":     handleFileRequest,
-	}
-
-	fmt.Printf("Body length before passing to handler: %d\n", len(body))
-	fmt.Println("body content: ", body)
-
-	handler, _ := findHandler(path, routes)
+	handler, _ := router.FindHandler(path)
 	switch {
 	case handler != nil:
 		contentType, content := handler(method, path, headers, body)

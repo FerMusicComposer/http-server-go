@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var router *Router
+
 func main() {
 	flag.StringVar(&directory, "directory", "", "the directory from which files will be served")
 	flag.Parse()
@@ -22,6 +24,12 @@ func main() {
 
 	fmt.Println("Server started on port 4221")
 	fmt.Println("")
+
+	// Initialize router and register routes
+	router = NewRouter()
+	router.AddRoute("/echo/", handleEchoPath)
+	router.AddRoute("/user-agent/", handleUserAgent)
+	router.AddRoute("/files/", handleFileRequest)
 
 	// Second, the listener is set to accept incoming connections
 	for {
