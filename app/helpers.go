@@ -133,7 +133,7 @@ func handleConnection(conn net.Conn) {
 	// and responding with the appropriate handler or route
 	// Else 404 NOT FOUND
 	var response string
-	handler, _ := router.FindHandler(path)
+	handler := router.FindHandler(path)
 	switch {
 	case handler != nil:
 		contentType, content := handler(method, path, headers, body)

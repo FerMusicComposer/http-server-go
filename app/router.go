@@ -16,12 +16,12 @@ func (r *Router) AddRoute(path string, handler Handler) {
 	r.routes[path] = handler
 }
 
-func (r *Router) FindHandler(path string) (Handler, string) {
+func (r *Router) FindHandler(path string) Handler {
 	for prefix, handler := range r.routes {
 		if strings.HasPrefix(path, prefix) {
-			return handler, prefix
+			return handler
 		}
 	}
 
-	return nil, ""
+	return nil
 }
