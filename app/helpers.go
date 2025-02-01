@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -69,7 +70,9 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	requestLine, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error parsing the request: ", err.Error())
+		if err != io.EOF {
+			fmt.Println("Error parsing the request: ", err.Error())
+		}
 		return
 	}
 	parts := strings.Split(requestLine, " ")
@@ -87,7 +90,13 @@ func handleConnection(conn net.Conn) {
 	var contentLength int
 	for {
 		line, err := reader.ReadString('\n')
-		if err != nil || line == "\r\n" {
+		if err != nil {
+			if err != io.EOF {
+				fmt.Println("Error reading header: ", err.Error())
+			}
+			break
+		}
+		if line == "\r\n" {
 			break
 		}
 		headerParts := strings.SplitN(strings.TrimSpace(line), ":", 2)
@@ -100,7 +109,7 @@ func handleConnection(conn net.Conn) {
 				fmt.Println("Found Content-Length header")
 				contentLength, err = strconv.Atoi(value)
 				if err != nil {
-					fmt.Println("Error setting content lenght: ", err)
+					fmt.Println("Error converting Content-Length:", err.Error())
 				}
 			}
 		}
@@ -111,16 +120,18 @@ func handleConnection(conn net.Conn) {
 	// Read request body
 	fmt.Println("contentLength: ", contentLength)
 	body := make([]byte, contentLength)
-	_, err = reader.Read(body)
-	if err != nil {
-		fmt.Println("Error reading request body:", err)
-		return
+	if contentLength > 0 {
+		_, err = reader.Read(body)
+		if err != nil && err != io.EOF {
+			fmt.Println("Error reading request body:", err.Error())
+			return
+		}
+		fmt.Printf("Read body: %s\n", string(body))
 	}
-	fmt.Printf("Read body: %s\n", string(body))
+
 	// Fourth, based on the path we respond to the incoming connection by checking which route is being requested
 	// and responding with the appropriate handler or route
 	// Else 404 NOT FOUND
-
 	var response string
 	handler, _ := router.FindHandler(path)
 	switch {
